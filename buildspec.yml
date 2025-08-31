@@ -19,7 +19,29 @@ phases:
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
-      - printf '{"AWSEBDockerrunVersion":1,"containerDefinitions":[{"name":"app","image":"%s","essential":true,"memory":512,"portMappings":[{"hostPort":80,"containerPort":3000}]}]}' $REPOSITORY_URI:$IMAGE_TAG > Dockerrun.aws.json
+      - |
+        cat << EOF > Dockerrun.aws.json
+        {
+          "AWSEBDockerrunVersion": "1",
+          "Image": {
+            "Name": "${REPOSITORY_URI}:${IMAGE_TAG}",
+            "Update": "true"
+          },
+          "Ports": [
+            {
+              "ContainerPort": "3000"
+            }
+          ],
+          "Volumes": [
+            {
+              "HostDirectory": "/var/app/current/logs",
+              "ContainerDirectory": "/usr/src/app/logs"
+            }
+          ],
+          "Logging": "/var/log/containers/app.log"
+        }
+        EOF
+      - cat Dockerrun.aws.json
 
 artifacts:
   files:
